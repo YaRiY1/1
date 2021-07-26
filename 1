@@ -1,0 +1,62 @@
+import telebot
+import random
+
+token = "1748850816:AAFxvwIMQBRNBhpR1WchajDbO_J88yCQww0"
+
+bot = telebot.TeleBot(token)
+
+tasks = {}
+RANDOM_TASKS = ["Пойти погулять", "Заняться своим хобби", "Поубирать", "Покушать", "Посмотреть фильм", "Поработать"]
+HELP ="""
+/help - вывод списка команд.
+/add - добавить задачу в список задач.
+/show - вывести все добавленные задачи.
+/exit - выход из программы!
+/random - добавлять случайную задачу на дату "Сегодня"
+"""
+
+def add_todo(date, task):
+    if date in tasks:
+            tasks[date].append(task)
+    else:
+            tasks[date] = []
+            tasks[date].append(task)
+
+@bot.message_handler(commands=["help"])
+def help(message):
+    bot.send_message(message.chat.id, HELP)
+
+@bot.message_handler(commands=["add"])
+def add(message):
+    command = message.text.split(maxsplit=2)
+    date = command[1].lower()
+    task = command[2]
+    if len(task)<3:
+        bot.send_message(message.chat.id, "Ошбика! введите задачу больше 3-х символов")
+    else:
+        add_todo(date, task)
+        text = "Задача > "+ "|| " + task + " ||" +" добавлена на дату > " + date
+        bot.send_message(message.chat.id, text)
+
+@bot.message_handler(commands=["random"])
+def random_add(message):
+    date = "сегодня"
+    task = random.choice(RANDOM_TASKS)
+    add_todo(date, task)
+    text = "Случайная задача > "+ "|| " + task + " ||" +" была добавлена на дату > " + date
+    bot.send_message(message.chat.id, text)
+
+@bot.message_handler(commands=["show"])
+def show(message):
+    count = 1
+    command = message.text.split(maxsplit = count)
+    date = command[1].lower()
+    text = ""
+    if date in tasks:
+        text = date.upper() + "\n"
+        for task in tasks[date]:
+            text = text + "[-|-] " + task + "\n"
+    else:
+        text = "Задач на дату " + date + " не найдено"
+    bot.send_message(message.chat.id, text)
+bot.polling(none_stop=True)
